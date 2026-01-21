@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# VS Code
+.vscode/
+
+# Data
+data/
+*.xml
+*.csv
+
+# Model checkpoints
+*.pt
+models/**/outputs/
+
+# OS
+.DS_Store
+Thumbs.db
