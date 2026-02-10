@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 venv/
-
+venvp/
 # VS Code
 .vscode/
 
@@ -18,3 +18,4 @@ models/**/outputs/
 # OS
 .DS_Store
 Thumbs.db
+.env

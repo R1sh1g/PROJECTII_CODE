@@ -1,0 +1,34 @@
+Backend
+Step 1: Go to new terminal
+Step 2: Go to PS C:\Users\Rishi\PROJECTII_CODE (in your terminal)
+Step 3: Activate Virtual enviroment (command - .\venvp\Scripts\activate )
+Step 4: Go to C:\Users\Rishi\PROJECTII_CODE\reviewOps\backend> (use command - cd reviewOps, cd backend)
+Step 5: Run the app (command - uvicorn app:app --reload)
+
+INFO:     Started server process [45520]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+Once this message comes open new terminal
+
+Below is Not required (FYI)
+If you want to check Backend API Go to the below link
+http://127.0.0.1:8000/docs
+CLick on any path -> Click on Try it out --
+
+
+Frontend
+Step 1: Open a new terminal (!!DO NOT CLOSE BACKEND TERMINAL!!)
+Step 2: Go to PS C:\Users\Rishi\PROJECTII_CODE (in your terminal)
+Step 3: Activate Virtual enviroment (command - .\venvp\Scripts\activate )
+Step 4: Go to C:\Users\Rishi\PROJECTII_CODE\reviewOps\frontend> (use command - cd frontend)
+Step 5: Run command - npm run dev
+
+➜  Local:   http://localhost:5173/ <--Click on this link(from the terminal)
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+
+
+Once you get this message the frontend is Loaded (Click on the localhost link)
+
+!! TO back back to previos path (command - cd..)
