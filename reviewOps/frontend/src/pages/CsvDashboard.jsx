@@ -1,3 +1,4 @@
+// src/pages/CsvDashboard.jsx
 import { useMemo, useState } from "react";
 import { predictCsv } from "../api";
 
@@ -14,7 +15,7 @@ export default function CsvDashboard() {
       const data = await predictCsv(file);
       setResp(data);
     } catch (e) {
-      setErr(String(e.message || e));
+      setErr(String(e?.message || e));
     } finally {
       setLoading(false);
     }
@@ -29,95 +30,159 @@ export default function CsvDashboard() {
     for (const r of resp.results) {
       for (const p of r.predictions || []) {
         aspectFreq[p.aspect] = (aspectFreq[p.aspect] || 0) + 1;
-        sentimentByAspect[p.aspect] = sentimentByAspect[p.aspect] || { negative: 0, neutral: 0, positive: 0 };
-        sentimentByAspect[p.aspect][p.sentiment] = (sentimentByAspect[p.aspect][p.sentiment] || 0) + 1;
+        sentimentByAspect[p.aspect] =
+          sentimentByAspect[p.aspect] || { negative: 0, neutral: 0, positive: 0 };
+        sentimentByAspect[p.aspect][p.sentiment] =
+          (sentimentByAspect[p.aspect][p.sentiment] || 0) + 1;
       }
     }
 
-    const topAspects = Object.entries(aspectFreq).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const topAspects = Object.entries(aspectFreq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
 
     const topNegative = Object.entries(sentimentByAspect)
-      .map(([aspect, dist]) => ({ aspect, negative: dist.negative || 0, total: (dist.negative||0)+(dist.neutral||0)+(dist.positive||0) }))
+      .map(([aspect, dist]) => ({
+        aspect,
+        negative: dist.negative || 0,
+        neutral: dist.neutral || 0,
+        positive: dist.positive || 0,
+        total: (dist.negative || 0) + (dist.neutral || 0) + (dist.positive || 0),
+      }))
       .sort((a, b) => b.negative - a.negative)
       .slice(0, 10);
 
     return { aspectFreq, sentimentByAspect, topAspects, topNegative };
   }, [resp]);
 
-  return (
-    <div style={card}>
-      <h2>CSV Upload + Dashboard</h2>
+  const canRun = !!file && !loading;
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-        <button onClick={onRun} disabled={!file || loading}>
-          {loading ? "Running..." : "Run ACD + ASC"}
-        </button>
-        {err && <span style={{ color: "crimson" }}>{err}</span>}
+  return (
+    <section className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.06)] backdrop-blur">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-base font-semibold tracking-tight text-white">
+          CSV Batch Analysis
+        </h2>
+        <p className="text-sm text-white/60">
+          Upload a CSV, run ACD + ASC, and inspect aggregate metrics.
+        </p>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+          <label className="block w-full">
+            <span className="sr-only">Choose CSV file</span>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="block w-full cursor-pointer rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/80 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-white/15 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+            />
+          </label>
+
+          <button
+            onClick={onRun}
+            disabled={!canRun}
+            className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+          >
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Running…
+              </span>
+            ) : (
+              "Run ACD + ASC"
+            )}
+          </button>
+        </div>
+
+        {err ? (
+          <div
+            role="alert"
+            className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"
+          >
+            {err}
+          </div>
+        ) : null}
       </div>
 
       {resp?.count != null && (
-        <div style={{ marginTop: 12, color: "#444" }}>
-          <b>Processed reviews:</b> {resp.count}
+        <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/70">
+          <span className="font-semibold text-white">Processed reviews:</span>{" "}
+          {resp.count}
         </div>
       )}
 
-      {metrics && (
-        <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div style={panel}>
-            <h3>Top Aspects</h3>
-            <ul>
+      {metrics ? (
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">Top Aspects</h3>
+              <span className="text-xs text-white/50">Top 10</span>
+            </div>
+
+            <ul className="mt-3 space-y-2">
               {metrics.topAspects.map(([a, c]) => (
-                <li key={a}>
-                  {a}: <b>{c}</b>
+                <li
+                  key={a}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2"
+                >
+                  <span className="truncate text-sm text-white/85">{a}</span>
+                  <span className="ml-3 inline-flex shrink-0 items-center rounded-lg bg-white/10 px-2 py-0.5 text-xs font-semibold text-white">
+                    {c}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div style={panel}>
-            <h3>Top Negative Aspects</h3>
-            <ul>
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">Top Negative Aspects</h3>
+              <span className="text-xs text-white/50">Top 10</span>
+            </div>
+
+            <ul className="mt-3 space-y-2">
               {metrics.topNegative.map((x) => (
-                <li key={x.aspect}>
-                  {x.aspect}: <b>{x.negative}</b> negatives
+                <li
+                  key={x.aspect}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2"
+                >
+                  <span className="truncate text-sm text-white/85">{x.aspect}</span>
+
+                  <div className="ml-3 flex shrink-0 items-center gap-2">
+                    <span className="inline-flex items-center rounded-lg bg-rose-500/20 px-2 py-0.5 text-xs font-semibold text-rose-100">
+                      {x.negative} neg
+                    </span>
+                    <span className="text-xs text-white/50">/ {x.total} total</span>
+                  </div>
                 </li>
               ))}
             </ul>
           </div>
+        </div>
+      ) : (
+        <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/60">
+          Upload a CSV and run analysis to see top aspects and sentiment distributions.
         </div>
       )}
 
       {resp?.results?.length ? (
-        <div style={{ marginTop: 16 }}>
-          <h3>Rows (first 20)</h3>
-          <pre style={pre}>{JSON.stringify(resp.results.slice(0, 20), null, 2)}</pre>
+        <div className="mt-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white">Rows (first 20)</h3>
+            <span className="text-xs text-white/50">
+              Showing {Math.min(20, resp.results.length)} of {resp.results.length}
+            </span>
+          </div>
+
+          <div className="mt-3 overflow-hidden rounded-2xl border border-white/10">
+            <pre className="max-h-[360px] overflow-x-auto bg-black/60 p-4 text-xs leading-relaxed text-white/80">
+              {JSON.stringify(resp.results.slice(0, 20), null, 2)}
+            </pre>
+          </div>
         </div>
       ) : null}
-    </div>
+    </section>
   );
 }
-
-const card = {
-  border: "1px solid #cf0404",
-  borderRadius: 12,
-  padding: 16,
-  background: "white",
-  marginTop: 16,
-};
-
-const panel = {
-  border: "1px solid #eee",
-  borderRadius: 10,
-  padding: 12,
-  background: "#fafafa",
-};
-
-const pre = {
-  background: "#0b1020",
-  color: "#e4560f",
-  padding: 12,
-  borderRadius: 10,
-  overflowX: "auto",
-  maxHeight: 360,
-};
