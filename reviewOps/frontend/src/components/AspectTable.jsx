@@ -2,38 +2,48 @@ export default function AspectTable({ predictions }) {
   const rows = Array.isArray(predictions) ? predictions : [];
 
   return (
-    <div style={{ marginTop: 16, color: "#efefef" }}>
-      <h3 className="text-white">Predictions ({rows.length})</h3>
+    <div className="mt-4">
+      <h3 className="mb-3 text-sm font-semibold">
+        Predictions ({rows.length})
+      </h3>
 
       {rows.length === 0 ? (
-        <div style={{ color: "#777" }}>No predictions to display.</div>
+        <div className="text-sm text-gray-500 dark:text-white/50">
+          No predictions to display.
+        </div>
       ) : (
-        <div className="text-white">
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={th}>Aspect</th>
-              <th style={th}>Aspect Conf</th>
-              <th style={th}>Sentiment</th>
-              <th style={th}>Sent Conf</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((p, i) => (
-              <tr key={i}>
-                <td style={td}>{p.aspect}</td>
-                <td style={td}>{Number(p.aspect_confidence).toFixed(3)}</td>
-                <td style={{ ...td, fontWeight: 700 }}>{p.sentiment}</td>
-                <td style={td}>{Number(p.sentiment_confidence).toFixed(3)}</td>
+        <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-100 dark:bg-black/40">
+              <tr>
+                <th className="px-3 py-2 text-left">Aspect</th>
+                <th className="px-3 py-2 text-left">Aspect Conf</th>
+                <th className="px-3 py-2 text-left">Sentiment</th>
+                <th className="px-3 py-2 text-left">Sent Conf</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((p, i) => (
+                <tr
+                  key={i}
+                  className="border-t border-gray-200 dark:border-white/10"
+                >
+                  <td className="px-3 py-2">{p.aspect}</td>
+                  <td className="px-3 py-2">
+                    {Number(p.aspect_confidence).toFixed(3)}
+                  </td>
+                  <td className="px-3 py-2 font-semibold">
+                    {p.sentiment}
+                  </td>
+                  <td className="px-3 py-2">
+                    {Number(p.sentiment_confidence).toFixed(3)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   );
 }
-
-const th = { textAlign: "left", borderBottom: "1px solid #ddd", padding: "8px" };
-const td = { borderBottom: "1px solid #eee", padding: "8px" };
