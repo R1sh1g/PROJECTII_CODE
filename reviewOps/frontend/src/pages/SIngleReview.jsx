@@ -42,7 +42,7 @@ export default function SingleReview() {
           onChange={(e) => setReview(e.target.value)}
           rows={5}
           placeholder="Type or paste a review…"
-          className="mt-2 w-full resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 shadow-sm outline-none transition placeholder:text-white/40 focus:border-white/20 focus:ring-2 focus:ring-violet-500/30"
+          className=" text-white mt-2 w-full resize-y rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 shadow-sm outline-none transition placeholder:text-white/40 focus:border-white/20 focus:ring-2 focus:ring-violet-500/30"
         />
         <div className="mt-2 flex items-center justify-between text-xs text-white/50">
           <span>Tip: include multiple sentences for better coverage.</span>
@@ -101,13 +101,14 @@ export default function SingleReview() {
           <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Predictions</h3>
-              <span className="text-xs text-white/50">
+              <span className="text-xs text-white">
                 {(out?.predictions?.length || 0).toLocaleString()} items
               </span>
             </div>
 
-            <AspectTable predictions={out?.predictions || []} />
-          </div>
+            < AspectTable predictions={out?.predictions || []} />
+          <div className="text-white">
+            </div>
 
           {/* DEBUG: remove later */}
           <details className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -121,6 +122,7 @@ export default function SingleReview() {
             </div>
           </details>
         </div>
+          </div>
       )}
     </section>
   );

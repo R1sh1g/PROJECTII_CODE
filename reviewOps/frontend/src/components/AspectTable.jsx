@@ -2,13 +2,14 @@ export default function AspectTable({ predictions }) {
   const rows = Array.isArray(predictions) ? predictions : [];
 
   return (
-    <div style={{ marginTop: 16, color: "#111" }}>
-      <h3>Predictions ({rows.length})</h3>
+    <div style={{ marginTop: 16, color: "#efefef" }}>
+      <h3 className="text-white">Predictions ({rows.length})</h3>
 
       {rows.length === 0 ? (
         <div style={{ color: "#777" }}>No predictions to display.</div>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="text-white">
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
               <th style={th}>Aspect</th>
@@ -28,6 +29,7 @@ export default function AspectTable({ predictions }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
