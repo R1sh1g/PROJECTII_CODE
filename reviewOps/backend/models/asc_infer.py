@@ -1,9 +1,24 @@
 # reviewOps/backend/models/asc_infer.py
 
+import os
+from pathlib import Path
+
 import numpy as np
 import torch
 import torch.nn as nn
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoModel, AutoTokenizer
+
+
+def _resolve_path(maybe_path: str | None, base_dir: Path) -> Path | None:
+    if not maybe_path:
+        return None
+    p = Path(maybe_path)
+    return p if p.is_absolute() else (base_dir / p)
+
+
+def _backend_root() -> Path:
+
+    return Path(__file__).resolve().parents[1]
 
 
 class ACSCTransformer(nn.Module):
@@ -21,7 +36,7 @@ class ACSCTransformer(nn.Module):
 
 
 class ASCInfer:
-    def __init__(self, ckpt_path: str, model_name: str = "roberta-base", max_len: int = 128):
+    def __init__(self, ckpt_path: str | Path, model_name: str = "roberta-base", max_len: int = 128):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model_name = model_name
         self.max_len = max_len
@@ -30,7 +45,18 @@ class ASCInfer:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model = ACSCTransformer(self.model_name, 3).to(self.device)
 
-        ckpt = torch.load(ckpt_path, map_location=self.device)
+        ckpt_path = Path(ckpt_path).expanduser().resolve()
+        if not ckpt_path.exists():
+            raise FileNotFoundError(f"ASC checkpoint not found: {ckpt_path}")
+
+        ckpt = torch.load(str(ckpt_path), map_location=self.device)
+        # Expecting {"model_state": ...}
+        if "model_state" not in ckpt:
+            raise KeyError(
+                f"Checkpoint missing 'model_state' key: {ckpt_path}. "
+                "Update loader or re-export checkpoint in expected format."
+            )
+
         self.model.load_state_dict(ckpt["model_state"])
         self.model.eval()
 
@@ -59,6 +85,12 @@ class ASCInfer:
 
 
 def load_asc():
-    # From reviewOps/backend -> go up 2 levels to PROJECTII_CODE root
-    ckpt_path = "C:\\Users\\Rishi\\PROJECTII_CODE\\models\\maml_acsc_epoch4.pt"
+
+    backend_root = _backend_root()
+    artifacts_dir = backend_root / "models" / "artifacts"
+
+    env_ckpt = _resolve_path(os.getenv("ASC_CKPT_PATH"), backend_root)
+    default_ckpt = artifacts_dir / "maml_acsc_epoch4.pt"
+
+    ckpt_path = env_ckpt or default_ckpt
     return ASCInfer(ckpt_path=ckpt_path, model_name="roberta-base", max_len=128)

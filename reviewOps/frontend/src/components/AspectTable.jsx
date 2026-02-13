@@ -28,7 +28,7 @@ export default function AspectTable({ predictions }) {
                   key={i}
                   className="border-t border-gray-200 dark:border-white/10"
                 >
-                  <td className="px-3 py-2">{p.aspect}</td>
+                  <td className="px-3 py-2">{p.aspect.split("#")[0]}</td>
                   <td className="px-3 py-2">
                     {Number(p.aspect_confidence).toFixed(3)}
                   </td>

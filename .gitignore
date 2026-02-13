@@ -13,7 +13,10 @@ data/
 
 # Model checkpoints
 *.pt
+reviewOps/backend/models/artifacts/acd_model/*.json
+reviewOps/backend/models/artifacts/acd_model/*.safetensors
 models/**/outputs/
+
 
 # OS
 .DS_Store

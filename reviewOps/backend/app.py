@@ -1,17 +1,19 @@
+# reviewOps/backend/app.py
+
 from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+import csv
 import pandas as pd
 from io import BytesIO
 
 from models.acd_infer import load_acd
 from models.asc_infer import load_asc
 from models.pipelines import ReviewPipeline
-from fastapi.middleware.cors import CORSMiddleware
-
 
 
 app = FastAPI(title="ReviewOps API")
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,39 +29,29 @@ app.add_middleware(
 )
 
 
-acd = load_acd()
-asc = load_asc()
-pipeline = ReviewPipeline(acd, asc)
-
 class ReviewInput(BaseModel):
     review: str
-import csv
-import pandas as pd
-from io import BytesIO
+
 
 def read_csv_safe(content: bytes) -> pd.DataFrame:
     # 1) decode bytes with fallback encodings
+    text = None
     for enc in ("utf-8", "utf-8-sig", "cp1252", "latin1"):
         try:
             text = content.decode(enc)
             break
         except UnicodeDecodeError:
-            text = None
+            pass
     if text is None:
-        # last resort: replace bad chars
         text = content.decode("latin1", errors="replace")
 
-    # 2) try normal read first (good CSVs)
+    # 2) try normal read first
     try:
-        return pd.read_csv(
-            BytesIO(text.encode("utf-8")),
-            engine="python",
-        )
+        return pd.read_csv(BytesIO(text.encode("utf-8")), engine="python")
     except Exception:
         pass
 
-    # 3) try with flexible quoting + skipping bad lines
-    # engine="python" allows on_bad_lines
+    # 3) fallback with flexible quoting + skipping bad lines
     return pd.read_csv(
         BytesIO(text.encode("utf-8")),
         engine="python",
@@ -68,9 +60,18 @@ def read_csv_safe(content: bytes) -> pd.DataFrame:
     )
 
 
+@app.on_event("startup")
+def startup_load_models():
+
+    acd = load_acd()
+    asc = load_asc()
+    app.state.pipeline = ReviewPipeline(acd, asc)
+
+
 @app.post("/predict")
 def predict_review(inp: ReviewInput):
-    return pipeline.run(inp.review)
+    return app.state.pipeline.run(inp.review)
+
 
 @app.post("/predict_csv")
 async def predict_csv(file: UploadFile = File(...)):
@@ -80,14 +81,9 @@ async def predict_csv(file: UploadFile = File(...)):
     if "review" not in df.columns:
         return {"error": "CSV must contain a 'review' column"}
 
-    outputs = []
-    for r in df["review"].astype(str):
-        outputs.append(pipeline.run(r))
+    outputs = [app.state.pipeline.run(str(r)) for r in df["review"].astype(str)]
 
-    return {
-        "count": len(outputs),
-        "results": outputs
-    }
+    return {"count": len(outputs), "results": outputs}
 
 
 @app.get("/")
